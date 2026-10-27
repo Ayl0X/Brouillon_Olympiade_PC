@@ -1,11 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="Rebond.cpp" />
-    <ClCompile Include="Gravite.cpp" />
-    <ClCompile Include="Update.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="MecaniqueDesFluides.cpp" />
+    <ClCompile Include="RebondEtGravite.cpp" />
+    <ClCompile Include="testVisu.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Math.h" />
+    <ClInclude Include="RebondEtGravite.h" />
+    <ClInclude Include="MecaniqueDesFluides.h" />
   </ItemGroup>
 </Project>
