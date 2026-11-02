@@ -8,7 +8,7 @@
 //
 // IMPORTANT : ce fichier contient son propre main(). Il ne faut pas le compiler
 // avec main.cpp dans le meme projet (voir les instructions de mise en place).
-
+/*
 #include <SFML/Graphics.hpp>
 #include <algorithm>
 #include <cmath>
@@ -24,9 +24,9 @@ extern std::vector<std::vector<float>> positions;
 // --- Parametres de la vue ---
 static const unsigned int LARGEUR = 800;
 static const unsigned int HAUTEUR = 900;
-static const float ECHELLE = 8.0f;      // 1 m = 8 pixels
+static const float ECHELLE = 150.0f;    // 1 m = 150 pixels (vue d'environ 5 m x 6 m)
+static const float RAYON_M = 0.1f;      // balles de 10 cm de rayon
 static const float MARGE_BAS = 40.0f;   // espace sous le sol (pixels)
-static const float RAYON_M = 0.8f;      // rayon d'affichage d'une particule (m)
 
 // Monde (m, y vers le haut) -> ecran (pixels, y vers le bas)
 static sf::Vector2f mondeVersEcran(float x, float y) {
@@ -39,7 +39,7 @@ static std::vector<particule> creerParticules() {
     for (int i = 0; i < 10; ++i) {
         for (int j = 0; j < 10; ++j) {
             particule p;
-            p.position = { 5.0f + i * 10.0f, 20.0f + j * 7.0f };
+            p.position = { 0.3f + i * 0.5f, 1.0f + j * 0.4f };
             p.velocite = { 0.0f, 0.0f };
             liste.push_back(p);
         }
@@ -148,4 +148,4 @@ int main() {
     }
 
     return 0;
-}
+}*/

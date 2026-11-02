@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <numeric>
 #include <iostream>
@@ -19,11 +19,24 @@ inline std::vector<float> soustractionScalaire(const std::vector<float>& v1, con
     return resultat;
 }
 
-// Ajout d'une fonction pour multiplier un vecteur par un scalaire
+// Multiplication d'un vecteur par un scalaire
 inline std::vector<float> multiplicationScalaire(const std::vector<float>& v, float scalaire) {
     std::vector<float> resultat(v.size());
     for (size_t i = 0; i < v.size(); ++i) {
         resultat[i] = v[i] * scalaire;
+    }
+    return resultat;
+}
+
+// Division d'un vecteur par un scalaire
+inline std::vector<float> divisionScalaire(const std::vector<float>& v, float scalaire) {
+    if (scalaire == 0.0f) {
+        std::cerr << "Division par zero !" << std::endl;
+        return {};
+    }
+    std::vector<float> resultat(v.size());
+    for (size_t i = 0; i < v.size(); ++i) {
+        resultat[i] = v[i] / scalaire;
     }
     return resultat;
 }
@@ -70,4 +83,9 @@ inline std::vector<float> normaliser(const std::vector<float>& v) {
         return v;
     }
     return multiplicationScalaire(v, 1.0 / n);
+}
+
+inline std::vector<float> GetRandomDir() {
+    float angle = static_cast<float>(rand()) / RAND_MAX * 2.0f * 3.14159265358979323846f; // angle aleatoire entre 0 et 2π
+	return { std::cos(angle), std::sin(angle) };
 }

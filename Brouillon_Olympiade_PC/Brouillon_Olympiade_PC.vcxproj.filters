@@ -5,6 +5,8 @@
     <ClCompile Include="MecaniqueDesFluides.cpp" />
     <ClCompile Include="RebondEtGravite.cpp" />
     <ClCompile Include="testVisu.cpp" />
+    <ClCompile Include="testChamp.cpp" />
+    <ClCompile Include="testSimulation.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Math.h" />
