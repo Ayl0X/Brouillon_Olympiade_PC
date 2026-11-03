@@ -28,6 +28,9 @@ std::vector<std::vector<float>> velocites;  // vitesse (m/s) : velocity[1] = vit
 std::vector<float> proprietesParticules;
 std::vector<float> densites;
 
+float viscosite = 0.5f; // coefficient de viscosite dynamique (mu)
+std::vector<std::array<float, 2>> accelerations; // buffer d'accelerations
+
 std::vector<std::vector<float>> positionsPredites;
 
 static float volumeNoyau = 0.0f;       // pi * r^8 / 4
@@ -40,37 +43,61 @@ void preparerNoyaux() {                // a rappeler si rayonDeLissage change
 }
 
 void pasDeSimulation(float deltaT) {
-	positionsPredites.resize(positions.size());
+	const int n = (int)positions.size();
+	positionsPredites.resize(n);
+	accelerations.resize(n);
 
 	// 1) Gravite + positions predites
 #pragma omp parallel for
-	for (int i = 0; i < (int)positions.size(); i++)
+	for (int i = 0; i < n; i++)
 	{
 		velocites[i][1] -= gravity * deltaT;
-		positionsPredites[i] = additionVecteur(positions[i], multiplicationScalaire(velocites[i], 1/120.0f));
+		positionsPredites[i] = { positions[i][0] + velocites[i][0] / 120.0f,
+								 positions[i][1] + velocites[i][1] / 120.0f };
 	}
 
-	// 2) Pression calculee sur les positions predites : apres le swap, "positions" contient les predictions
+	// 2) Voisins et densites calcules sur les positions predites :
+	//    apres le swap, "positions" contient les predictions
 	positions.swap(positionsPredites);
 
 	UpdateSpatialLookup();
 	UpdateDensites();
 
+	// 3) Pression + viscosite : on stocke les accelerations (calculees a partir
+	//    des vitesses du debut du pas) avant de modifier les vitesses
 #pragma omp parallel for
-	for (int i = 0; i < (int)positions.size(); i++)
+	for (int i = 0; i < n; i++)
 	{
-		std::vector<float> forceDePression = calculForceDePression(i);
-		std::vector<float> accelerationDePression = divisionScalaire(forceDePression, densites[i]);
-		velocites[i] = additionVecteur(velocites[i], multiplicationScalaire(accelerationDePression, deltaT));
+		std::vector<float> fPression = calculForceDePression(i);
+		std::vector<float> fViscosite = calculForceViscosite(i);
+		const float densite = densites[i];
+
+		if (densite > 1e-6f) {
+			accelerations[i] = { (fPression[0] + fViscosite[0]) / densite,
+								 (fPression[1] + fViscosite[1]) / densite };
+		}
+		else {
+			accelerations[i] = { 0.0f, 0.0f };
+		}
 	}
 
 	positions.swap(positionsPredites);   // on remet les vraies positions
 
-	// 3) Deplacement + collisions
+	// 4) Application des accelerations aux vitesses
 #pragma omp parallel for
-	for (int i = 0; i < (int)positions.size(); i++)
+	for (int i = 0; i < n; i++)
 	{
-		positions[i] = additionVecteur(positions[i], multiplicationScalaire(velocites[i], deltaT));
+		velocites[i][0] += accelerations[i][0] * deltaT;
+		velocites[i][1] += accelerations[i][1] * deltaT;
+	}
+
+	// 5) Deplacement + collisions
+#pragma omp parallel for
+	for (int i = 0; i < n; i++)
+	{
+		positions[i][0] += velocites[i][0] * deltaT;
+		positions[i][1] += velocites[i][1] * deltaT;
+
 		particule pTemp{ positions[i], velocites[i] };
 		collision(pTemp);
 		positions[i] = pTemp.position;
@@ -190,6 +217,23 @@ std::vector<float> calculForceDePression(int IndexParticule) {
 
 		fx += dirX * facteur;
 		fy += dirY * facteur;
+		});
+
+	return { fx, fy };
+}
+
+std::vector<float> calculForceViscosite(int i) {
+	const float coef = 40.0f / (pi * std::pow(rayonDeLissage, 5.0f)); // constante du Laplacien (2D)
+	const float vix = velocites[i][0];
+	const float viy = velocites[i][1];
+	float fx = 0.0f, fy = 0.0f;
+
+	pourChaqueVoisin(positions[i], [&](int j, float distance) {
+		if (j == i) return; // (v_j - v_i) = 0 de toute facon
+		const float laplacien = coef * (rayonDeLissage - distance);
+		const float facteur = viscosite * masse / densites[j] * laplacien;
+		fx += (velocites[j][0] - vix) * facteur;
+		fy += (velocites[j][1] - viy) * facteur;
 		});
 
 	return { fx, fy };

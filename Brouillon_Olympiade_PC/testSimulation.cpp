@@ -66,7 +66,7 @@ static void creerParticules() {
     positions.clear();
     velocites.clear();
 
-    const int nx = 60, ny = 40;
+    const int nx = 80, ny = 40;
     const float espacement = 0.035f;
     const float x0 = (BOITE_L - (nx - 1) * espacement) / 2.0f;
     const float y0 = 4.0f;

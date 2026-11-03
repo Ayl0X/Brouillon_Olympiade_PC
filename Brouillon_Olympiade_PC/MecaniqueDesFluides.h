@@ -14,6 +14,7 @@ extern std::vector<std::vector<float>> positions;  // positions de toutes les pa
 extern std::vector<std::vector<float>> velocites;  // vitesses de toutes les particules (m/s)
 extern std::vector<float> densites;  // densites de toutes les particules (kg/m^3)
 extern std::vector<float> proprietesParticules;  // proprietes de toutes les particules (N/m^2)
+extern float viscosite;
 
 struct particule {
 	std::vector<float> position;
@@ -42,6 +43,9 @@ void UpdateDensites();
 
 // Propriete SPH au point donne, somme des contributions des particules de "positions"
 std::vector<float> calculForceDePression(int IndexParticule);
+
+// Propriete SPH au point donne, somme des contributions des particules de "positions"
+std::vector<float> calculForceViscosite(int i);
 
 // Conversion d'une densite en pression (N/m^2)
 float calculPressionPartage(float densiteA, float densiteB);
