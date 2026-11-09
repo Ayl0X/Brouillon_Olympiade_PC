@@ -27,7 +27,7 @@
 #include "MecaniqueDesFluides.h"
 
 // Variables globales definies dans MecaniqueDesFluides.cpp
-extern std::vector<std::vector<float>> positions;
+extern std::vector<Vec3> positions;
 extern std::vector<std::vector<float>> velocites;
 extern float coefficientRestitution;
 extern float gravity;

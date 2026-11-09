@@ -7,16 +7,13 @@
 #include <limits>
 #include <utility>
 #include "Math.h"
-#include "RebondEtGravite.h"
-#include "MecaniqueDesFluides.h"
+#include "..\..\RebondEtGravite\realiste\RebondEtGravite.h"
+#include "TMecaniqueDesFluides.h"
 
 // --- Etat global de la simulation ---
 // Axes : x horizontal, y vertical vers le haut. Le sol est le plan y = 0.
 
-float gravity = 9.81f;                 // pesanteur (m/s^2)
-float coefficientRestitution = 0.75f; // coefficient de restitution du sol (0 = inelastique, 1 = elastique)
 float seuilRepos = 0.1f;              
-float pi = 3.14159265358979323846f; // valeur de pi
 float rayonDeLissage = 0.35f; // rayon de lissage pour le calcul de densité
 float masse = 1.0f; 
 float densiteCible = 35.0f;
@@ -51,7 +48,7 @@ void pasDeSimulation(float deltaT) {
 #pragma omp parallel for
 	for (int i = 0; i < n; i++)
 	{
-		velocites[i][1] -= gravity * deltaT;
+		velocites[i][1] -= g_gravite * deltaT;
 		positionsPredites[i] = { positions[i][0] + velocites[i][0] / 120.0f,
 								 positions[i][1] + velocites[i][1] / 120.0f };
 	}
@@ -129,7 +126,7 @@ void collision(particule& p) {
 		std::vector<float> normale = { 0.0f, 1.0f }; // normale du sol, pointe vers l'exterieur (vers le haut)
 
 		// v' = v - (1 + e) * (v.n) * n  ->  ici, cela donne simplement vy' = -e * vy
-		p.velocite = rebond(p.velocite, normale, coefficientRestitution, 0.0f);
+		p.velocite = rebond(p.velocite, normale, 0.0f);
 		// Anti micro-rebonds : si la vitesse de rebond est trop faible, la balle s'immobilise sur le sol
 		if (std::abs(p.velocite[1]) < seuilRepos) {
 			p.velocite[1] = 0.0f;

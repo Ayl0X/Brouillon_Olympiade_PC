@@ -135,17 +135,25 @@ sfml-window.lib
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="testChamp.cpp" />
-    <ClCompile Include="testSimulation.cpp" />
-    <ClCompile Include="testVisu.cpp" />
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="MecaniqueDesFluides.cpp" />
-    <ClCompile Include="RebondEtGravite.cpp" />
+    <ClCompile Include="Lumiere\Realiste\RayTracing.cpp" />
+    <ClCompile Include="MecaniqueDesFluides\realiste\RMecaniqueDesFluides.cpp" />
+    <ClCompile Include="MecaniqueDesFluides\simpliste\SMecaniqueDesFluides.cpp" />
+    <ClCompile Include="MecaniqueDesFluides\tests\testChamp.cpp" />
+    <ClCompile Include="MecaniqueDesFluides\tests\testVisu.cpp" />
+    <ClCompile Include="RebondEtGravite\realiste\mainRR.cpp" />
+    <ClCompile Include="RebondEtGravite\realiste\RRebondEtGravite.cpp" />
+    <ClCompile Include="RebondEtGravite\simpliste\mainSR.cpp" />
+    <ClCompile Include="RebondEtGravite\simpliste\SRebondEtGravite.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Constantes.h" />
     <ClInclude Include="Math.h" />
-    <ClInclude Include="RebondEtGravite.h" />
-    <ClInclude Include="MecaniqueDesFluides.h" />
+    <ClInclude Include="MecaniqueDesFluides\realiste\RMecaniqueDesFluides.h" />
+    <ClInclude Include="MecaniqueDesFluides\simpliste\SMecaniqueDesFluides.h" />
+    <ClInclude Include="RebondEtGravite\realiste\mainRR.h" />
+    <ClInclude Include="RebondEtGravite\realiste\RRebondEtGravite.h" />
+    <ClInclude Include="RebondEtGravite\simpliste\mainSR.h" />
+    <ClInclude Include="RebondEtGravite\simpliste\SRebondEtGravite.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -1,25 +1,19 @@
 #pragma once
 
 #include <vector>
+#include "..\..\Constantes.h"
 
 // --- Mecanique des fluides : chute et rebond d'un corps ---
 // Simulation d'une balle dans le champ de pesanteur, avec rebond sur le sol (y = 0).
 // Axes : x horizontal, y vertical vers le haut.
 
 // Etat global de la simulation (defini dans MecaniqueDesFluides.cpp)
-extern float gravity;                // pesanteur (m/s^2)
-extern float coefficientRestitution; // coefficient de restitution du sol (0 = inelastique, 1 = elastique)
 extern float seuilRepos;             // vitesse verticale (m/s) en dessous de laquelle la balle s'immobilise
 extern std::vector<std::vector<float>> positions;  // positions de toutes les particules (m), utilisees par calculDensite()
 extern std::vector<std::vector<float>> velocites;  // vitesses de toutes les particules (m/s)
 extern std::vector<float> densites;  // densites de toutes les particules (kg/m^3)
 extern std::vector<float> proprietesParticules;  // proprietes de toutes les particules (N/m^2)
 extern float viscosite;
-
-struct particule {
-	std::vector<float> position;
-	std::vector<float> velocite;
-};
 
 void preparerNoyaux();
 

@@ -1,16 +1,24 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="MecaniqueDesFluides.cpp" />
-    <ClCompile Include="RebondEtGravite.cpp" />
-    <ClCompile Include="testVisu.cpp" />
-    <ClCompile Include="testChamp.cpp" />
-    <ClCompile Include="testSimulation.cpp" />
+    <ClCompile Include="RebondEtGravite\realiste\RRebondEtGravite.cpp" />
+    <ClCompile Include="MecaniqueDesFluides\tests\testVisu.cpp" />
+    <ClCompile Include="MecaniqueDesFluides\tests\testChamp.cpp" />
+    <ClCompile Include="MecaniqueDesFluides\simpliste\SMecaniqueDesFluides.cpp" />
+    <ClCompile Include="RebondEtGravite\realiste\mainRR.cpp" />
+    <ClCompile Include="MecaniqueDesFluides\realiste\RMecaniqueDesFluides.cpp" />
+    <ClCompile Include="RebondEtGravite\simpliste\SRebondEtGravite.cpp" />
+    <ClCompile Include="RebondEtGravite\simpliste\mainSR.cpp" />
+    <ClCompile Include="Lumiere\Realiste\RayTracing.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Math.h" />
-    <ClInclude Include="RebondEtGravite.h" />
-    <ClInclude Include="MecaniqueDesFluides.h" />
+    <ClInclude Include="RebondEtGravite\realiste\RRebondEtGravite.h" />
+    <ClInclude Include="MecaniqueDesFluides\simpliste\SMecaniqueDesFluides.h" />
+    <ClInclude Include="MecaniqueDesFluides\realiste\RMecaniqueDesFluides.h" />
+    <ClInclude Include="Constantes.h" />
+    <ClInclude Include="RebondEtGravite\realiste\mainRR.h" />
+    <ClInclude Include="RebondEtGravite\simpliste\SRebondEtGravite.h" />
+    <ClInclude Include="RebondEtGravite\simpliste\mainSR.h" />
   </ItemGroup>
 </Project>
