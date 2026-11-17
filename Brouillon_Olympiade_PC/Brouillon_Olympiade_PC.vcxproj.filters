@@ -1,24 +1,36 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="RebondEtGravite\realiste\RRebondEtGravite.cpp" />
+    <ClCompile Include="RebondEtGravite\realiste\rebondCoef.cpp" />
     <ClCompile Include="MecaniqueDesFluides\tests\testVisu.cpp" />
-    <ClCompile Include="MecaniqueDesFluides\tests\testChamp.cpp" />
-    <ClCompile Include="MecaniqueDesFluides\simpliste\SMecaniqueDesFluides.cpp" />
-    <ClCompile Include="RebondEtGravite\realiste\mainRR.cpp" />
-    <ClCompile Include="MecaniqueDesFluides\realiste\RMecaniqueDesFluides.cpp" />
-    <ClCompile Include="RebondEtGravite\simpliste\SRebondEtGravite.cpp" />
-    <ClCompile Include="RebondEtGravite\simpliste\mainSR.cpp" />
-    <ClCompile Include="Lumiere\Realiste\RayTracing.cpp" />
+    <ClCompile Include="MecaniqueDesFluides\simpliste\MecaniqueDesFluidesCoef.cpp" />
+    <ClCompile Include="RebondEtGravite\realiste\mainRC.cpp" />
+    <ClCompile Include="MecaniqueDesFluides\realiste\MecaniqueDesFluides.cpp" />
+    <ClCompile Include="RebondEtGravite\simpliste\fastInverseSquareRoot.cpp" />
+    <ClCompile Include="RebondEtGravite\simpliste\mainFISR.cpp" />
+    <ClCompile Include="Lumiere\realiste\pathTracer.cpp" />
+    <ClCompile Include="Lumiere\simpliste\Phong.cpp" />
+    <ClCompile Include="MecaniqueDesFluides\realiste\VisualisationFluides.cpp" />
+    <ClCompile Include="MecaniqueDesFluides\tests\TMecaniqueDesFluides.cpp" />
+    <ClCompile Include="MecaniqueDesFluides\tests\testSimulation.cpp" />
+    <ClCompile Include="MecaniqueDesFluides\realiste\flex.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Math.h" />
-    <ClInclude Include="RebondEtGravite\realiste\RRebondEtGravite.h" />
-    <ClInclude Include="MecaniqueDesFluides\simpliste\SMecaniqueDesFluides.h" />
-    <ClInclude Include="MecaniqueDesFluides\realiste\RMecaniqueDesFluides.h" />
+    <ClInclude Include="RebondEtGravite\realiste\rebondCoef.h" />
+    <ClInclude Include="MecaniqueDesFluides\simpliste\MecaniqueDesFluidesCoef.h" />
+    <ClInclude Include="MecaniqueDesFluides\realiste\MecaniqueDesFluides.h" />
     <ClInclude Include="Constantes.h" />
-    <ClInclude Include="RebondEtGravite\realiste\mainRR.h" />
-    <ClInclude Include="RebondEtGravite\simpliste\SRebondEtGravite.h" />
-    <ClInclude Include="RebondEtGravite\simpliste\mainSR.h" />
+    <ClInclude Include="RebondEtGravite\realiste\mainRC.h" />
+    <ClInclude Include="RebondEtGravite\simpliste\fastInverseSquareRoot.h" />
+    <ClInclude Include="RebondEtGravite\simpliste\mainFISR.h" />
+    <ClInclude Include="MecaniqueDesFluides\tests\TMecaniqueDesFluides.h" />
+    <ClInclude Include="Lumiere\realiste\pathTracer.h" />
+    <ClInclude Include="Lumiere\simpliste\phong.h" />
+    <ClInclude Include="MecaniqueDesFluides\realiste\VisualisationFluides.h" />
+    <ClInclude Include="MecaniqueDesFluides\tests\testChamp.h" />
+    <ClInclude Include="MecaniqueDesFluides\tests\testSimulation.h" />
+    <ClInclude Include="MecaniqueDesFluides\tests\testVisu.h" />
+    <ClInclude Include="MecaniqueDesFluides\realiste\flex_gl.h" />
   </ItemGroup>
 </Project>

@@ -8,25 +8,20 @@
 #include <utility>
 #include "Math.h"
 #include "..\..\Constantes.h"
-#include "..\..\RebondEtGravite\realiste\RRebondEtGravite.h"
-#include "RMecaniqueDesFluides.h"
+#include "..\..\RebondEtGravite\realiste\rebondCoef.h"
+#include "MecaniqueDesFluides.h"
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 // --- Etat global de la simulation ---
 // Axes : x horizontal, y vertical vers le haut. Le sol est le plan y = 0.
 
-/*
-float seuilRepos = 0.1f;
-float rayonDeLissage = 0.2f;
-float masse = 1.0f;                 // densite d'un reseau d'espacement 0.075 = ~1040
-float densiteCible = 210.0f;
-float multiplicateurPression = 200.0f;   // 70 a 150 testes stables
-*/
-
 float seuilRepos = 0.1f;
 float rayonDeLissage = 0.35f;
-float masse = 1.0f;                 // densite d'un reseau d'espacement 0.075 = ~1040
-float densiteCible = 50.0f;
-float multiplicateurPression = 100.0f;   // 70 a 150 testes stables
+float masse = 0.50f;                 // densite d'un reseau d'espacement 0.075 = ~1040
+float densiteCible = 1.0f;
+float multiplicateurPression = 70.0f;   // 70 a 150 testes stables
 
 std::vector<Vec3> positions;  // position
 std::vector<Vec3> velocites;  // vitesse
@@ -40,6 +35,14 @@ std::vector<Vec3> accelerations; // buffer d'accelerations
 std::vector<Vec3> positionsPredites;
 
 static float kSpiky = 0, kSpikyDeriv = 0, kVisc = 0;
+
+// --- Tampons de travail en espace "trie" : l'indice k est la position de la particule dans l'ordre des
+//     cellules de la grille (voisins contigus en memoire). sortedIdx[k] donne l'indice d'origine.
+//     Les tableaux positions / velocites / densites... gardent l'ordre d'origine (indices stables). ---
+static std::vector<float> rhoTrie, invRhoTrie, pressionTrie;
+static std::vector<Vec3>  velTrie;
+static std::vector<float> tamponThreads;   // nbThreads * 3 * n : accumulation par thread (chaque paire calculee 1 fois)
+static void calculerAccelerations();
 
 void preparerNoyaux() {            // à rappeler si rayonDeLissage change
 	const float h = rayonDeLissage;
@@ -87,12 +90,8 @@ void pasDeSimulation(float deltaT) {
 	construireVoisins();     // UNE seule recherche de voisins par particule
 	UpdateDensites();        // densités + pressions (1 calcul de pression par particule)
 
-	// 3) Accélérations (pression + viscosité fusionnées), sans nouvelle recherche
-#pragma omp parallel for schedule(static)
-	for (int i = 0; i < n; i++)
-	{
-		accelerations[i] = calculAcceleration(i);
-	}
+	// 3) Accélérations (pression + viscosité), chaque paire de voisins calculée une seule fois
+	calculerAccelerations();
 
 	positions.swap(positionsPredites);   // on remet les vraies positions
 
@@ -109,7 +108,7 @@ void pasDeSimulation(float deltaT) {
 		positions[i].z += velocites[i].z * deltaT;
 
 		particule pTemp{ positions[i], velocites[i] };
-		Rcollision(pTemp);
+		//Rcollision(pTemp, { 0.0f, 1.0f, 0.0f }, 0.035f / 2.0f);
 		positions[i] = pTemp.position;
 		velocites[i] = pTemp.velocite;
 	}
@@ -218,65 +217,7 @@ std::vector<float> distVoisins;  // idem
 std::vector<int>   nbVoisins;    // n
 std::vector<float> pressions;    // n
 
-void construireVoisins() {
-	const int n = (int)positions.size();
-	voisins.resize((size_t)n * MAX_VOISINS);
-	distVoisins.resize((size_t)n * MAX_VOISINS);
-	nbVoisins.resize(n);
-#pragma omp parallel for
-	for (int i = 0; i < n; i++) {
-		int c = 0;
-		const size_t base = (size_t)i * MAX_VOISINS;
-		pourChaqueVoisin(positions[i], [&](int j, float d) {
-			if (j != i && c < MAX_VOISINS) {
-				voisins[base + c] = j;
-				distVoisins[base + c] = d;
-				c++;
-			}
-			});
-		nbVoisins[i] = c;
-	}
-}
-
-void UpdateDensites() {
-	const int n = (int)positions.size();
-	densites.resize(n);
-	pressions.resize(n);
-#pragma omp parallel for
-	for (int i = 0; i < n; i++) {
-		float rho = noyauDeLissage(0.0f);            // contribution de i lui-même
-		const size_t base = (size_t)i * MAX_VOISINS;
-		for (int k = 0; k < nbVoisins[i]; k++)
-			rho += noyauDeLissage(distVoisins[base + k]);
-		densites[i] = masse * rho;
-		pressions[i] = convertirDensiteEnPression(densites[i]);   // 1 fois par particule
-	}
-}
-
-// Pression + viscosité dans la même boucle, sans nouvelle recherche
-inline Vec3 calculAcceleration(int i) {
-	float fx = 0, fy = 0, fz = 0;
-	const size_t base = (size_t)i * MAX_VOISINS;
-	for (int k = 0; k < nbVoisins[i]; k++) {
-		const int j = voisins[base + k];
-		const float d = distVoisins[base + k];
-		if (d < 1e-6f) continue;
-		const float invD = 1.0f / d;
-		const float rhoJ = densites[j];
-
-		const float pP = 0.5f * (pressions[i] + pressions[j]) * deriveNoyauDeLissage(d) * masse / rhoJ * invD;
-		fx += (positions[j].x - positions[i].x) * pP;
-		fy += (positions[j].y - positions[i].y) * pP;
-		fz += (positions[j].z - positions[i].z) * pP;
-
-		const float pV = viscosite * masse / rhoJ * kVisc * (rayonDeLissage - d);
-		fx += (velocites[j].x - velocites[i].x) * pV;
-		fy += (velocites[j].y - velocites[i].y) * pV;
-		fz += (velocites[j].z - velocites[i].z) * pV;
-	}
-	const float rho = densites[i];
-	return rho > 1e-6f ? Vec3{ fx / rho, fy / rho, fz / rho } : Vec3{ 0, 0, 0 };
-}
+// construireVoisins(), UpdateDensites() et calculAcceleration() : voir la version optimisee en fin de fichier.
 
 std::vector<Entree> spatialLookup;  // une entree par particule, triee par cle de cellule
 std::vector<int> startIndices;      // startIndices[cle] = premiere position de cette cle dans spatialLookup
@@ -423,4 +364,193 @@ static void pourChaqueVoisin(const Vec3& point, Fonction action) {
 			}
 		}
 	}
+}
+
+/////////////////////// Version optimisee (espace trie + paires uniques) //////////////////////////
+
+static inline int nbThreadsMax() {
+#ifdef _OPENMP
+	return omp_get_max_threads();
+#else
+	return 1;
+#endif
+}
+static inline int numeroThread() {
+#ifdef _OPENMP
+	return omp_get_thread_num();
+#else
+	return 0;
+#endif
+}
+static inline int nbThreadsActifs() {
+#ifdef _OPENMP
+	return omp_get_num_threads();
+#else
+	return 1;
+#endif
+}
+
+// Liste de voisins "demi" : pour la particule triee a, seulement les voisins k > a (indices tries).
+// Chaque paire (a, k) n'apparait donc qu'une fois ; MAX_VOISINS est une limite vers le haut seulement.
+void construireVoisins() {
+	const int n = (int)positions.size();
+	voisins.resize((size_t)n * MAX_VOISINS);
+	distVoisins.resize((size_t)n * MAX_VOISINS);
+	nbVoisins.resize(n);
+	if (n == 0 || (int)sortedIdx.size() != n) return;
+
+	const float r2 = rayonDeLissage * rayonDeLissage;
+#pragma omp parallel for schedule(static)
+	for (int a = 0; a < n; a++) {
+		int c = 0;
+		const size_t base = (size_t)a * MAX_VOISINS;
+		const Vec3 point = sortedPos[a];
+
+		int cx, cy, cz;
+		cellulePoint(point, cx, cy, cz);
+		const int x0 = std::max(cx - 1, 0), x1 = std::min(cx + 1, gNx - 1);
+		const int y0 = std::max(cy - 1, 0), y1 = std::min(cy + 1, gNy - 1);
+		const int z0 = std::max(cz - 1, 0), z1 = std::min(cz + 1, gNz - 1);
+
+		for (int z = z0; z <= z1; z++) {
+			for (int y = y0; y <= y1; y++) {
+				const int ligne = gNx * (y + gNy * z);
+				const int debut = std::max(cellStart[ligne + x0], a + 1);   // seulement k > a
+				const int fin = cellStart[ligne + x1 + 1];
+				for (int k = debut; k < fin; k++) {
+					const float dx = sortedPos[k].x - point.x;
+					const float dy = sortedPos[k].y - point.y;
+					const float dz = sortedPos[k].z - point.z;
+					const float d2 = dx * dx + dy * dy + dz * dz;
+					if (d2 <= r2 && c < MAX_VOISINS) {
+						voisins[base + c] = k;
+						distVoisins[base + c] = std::sqrt(d2);
+						c++;
+					}
+				}
+			}
+		}
+		nbVoisins[a] = c;
+	}
+}
+
+// Densites + pressions. Chaque paire ajoute son noyau aux deux particules ; accumulation par thread
+// (pas de conflit d'ecriture), puis somme. Resultats copies dans l'ordre d'origine (densites, pressions).
+void UpdateDensites() {
+	const int n = (int)positions.size();
+	densites.resize(n);
+	pressions.resize(n);
+	rhoTrie.resize(n);
+	invRhoTrie.resize(n);
+	pressionTrie.resize(n);
+	if (n == 0 || (int)sortedIdx.size() != n) return;
+
+	const size_t pas = (size_t)3 * n;
+	tamponThreads.resize((size_t)nbThreadsMax() * pas);
+	const float w0 = noyauDeLissage(0.0f);   // contribution de la particule elle-meme
+
+#pragma omp parallel
+	{
+		const int nta = nbThreadsActifs();
+		float* local = tamponThreads.data() + (size_t)numeroThread() * pas;
+		std::fill(local, local + n, 0.0f);
+
+#pragma omp for schedule(static)
+		for (int a = 0; a < n; a++) {
+			const size_t base = (size_t)a * MAX_VOISINS;
+			float acc = 0.0f;
+			for (int q = 0; q < nbVoisins[a]; q++) {
+				const float w = noyauDeLissage(distVoisins[base + q]);
+				acc += w;
+				local[voisins[base + q]] += w;
+			}
+			local[a] += acc;
+		}   // barriere implicite
+
+#pragma omp for schedule(static)
+		for (int a = 0; a < n; a++) {
+			float rho = w0;
+			for (int t = 0; t < nta; t++) rho += tamponThreads[(size_t)t * pas + a];
+			rho *= masse;
+			rhoTrie[a] = rho;
+			invRhoTrie[a] = rho > 1e-6f ? 1.0f / rho : 0.0f;
+			pressionTrie[a] = convertirDensiteEnPression(rho);
+			const int o = sortedIdx[a];
+			densites[o] = rho;
+			pressions[o] = pressionTrie[a];
+		}
+	}
+}
+
+// Pression + viscosite : chaque paire est evaluee une seule fois, la force est appliquee aux deux
+// particules (action / reaction). Positions = positions predites (sortedPos), vitesses = velocites courantes.
+static void calculerAccelerations() {
+	const int n = (int)positions.size();
+	accelerations.resize(n);
+	velTrie.resize(n);
+	if (n == 0 || (int)sortedIdx.size() != n) return;
+
+	const size_t pas = (size_t)3 * n;
+	tamponThreads.resize((size_t)nbThreadsMax() * pas);
+	const float h = rayonDeLissage;
+
+#pragma omp parallel
+	{
+		const int nta = nbThreadsActifs();
+		float* local = tamponThreads.data() + (size_t)numeroThread() * pas;
+		std::fill(local, local + pas, 0.0f);
+
+#pragma omp for schedule(static)
+		for (int a = 0; a < n; a++) velTrie[a] = velocites[sortedIdx[a]];   // vitesses dans l'ordre trie
+
+#pragma omp for schedule(static)
+		for (int a = 0; a < n; a++) {
+			const size_t base = (size_t)a * MAX_VOISINS;
+			const Vec3 pa = sortedPos[a];
+			const Vec3 va = velTrie[a];
+			const float Pa = pressionTrie[a];
+			const float invRa = invRhoTrie[a];
+			float fx = 0.0f, fy = 0.0f, fz = 0.0f;
+
+			for (int q = 0; q < nbVoisins[a]; q++) {
+				const int k = voisins[base + q];
+				const float d = distVoisins[base + q];
+				if (d < 1e-6f) continue;
+				const float invD = 1.0f / d;
+
+				const float pPression = 0.5f * (Pa + pressionTrie[k]) * deriveNoyauDeLissage(d) * masse * invD;
+				const float pVisc = viscosite * masse * kVisc * (h - d);
+
+				// force "brute" sur a ; sur k c'est l'oppose
+				const float tx = (sortedPos[k].x - pa.x) * pPression + (velTrie[k].x - va.x) * pVisc;
+				const float ty = (sortedPos[k].y - pa.y) * pPression + (velTrie[k].y - va.y) * pVisc;
+				const float tz = (sortedPos[k].z - pa.z) * pPression + (velTrie[k].z - va.z) * pVisc;
+
+				const float invRk = invRhoTrie[k];
+				fx += tx * invRk; fy += ty * invRk; fz += tz * invRk;
+				local[3 * (size_t)k + 0] -= tx * invRa;
+				local[3 * (size_t)k + 1] -= ty * invRa;
+				local[3 * (size_t)k + 2] -= tz * invRa;
+			}
+			local[3 * (size_t)a + 0] += fx;
+			local[3 * (size_t)a + 1] += fy;
+			local[3 * (size_t)a + 2] += fz;
+		}   // barriere implicite
+
+#pragma omp for schedule(static)
+		for (int a = 0; a < n; a++) {
+			float fx = 0.0f, fy = 0.0f, fz = 0.0f;
+			for (int t = 0; t < nta; t++) {
+				const float* l = tamponThreads.data() + (size_t)t * pas + 3 * (size_t)a;
+				fx += l[0]; fy += l[1]; fz += l[2];
+			}
+			const float invR = invRhoTrie[a];   // 0 si densite quasi nulle (comme avant : acceleration nulle)
+			accelerations[sortedIdx[a]] = Vec3{ fx * invR, fy * invR, fz * invR };
+		}
+	}
+}
+
+// Conservee pour compatibilite (declaration dans le .h) : l'acceleration est calculee en bloc par calculerAccelerations()
+inline Vec3 calculAcceleration(int i) {
+	return accelerations[i];
 }

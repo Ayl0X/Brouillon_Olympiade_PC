@@ -96,6 +96,19 @@ inline std::vector<float> GetRandomDir() {
     return { std::cos(angle), std::sin(angle) };
 }
 
+// Produit scalaire de deux std::vector<float> (equivalent de std::inner_product)
+inline float produitScalaire(const std::vector<float>& v1, const std::vector<float>& v2) {
+    if (v1.size() != v2.size()) {
+        std::cerr << "Les vecteurs doivent avoir la meme taille !" << std::endl;
+        return 0.0f;
+    }
+    float resultat = 0.0f;
+    for (size_t i = 0; i < v1.size(); ++i) {
+        resultat += v1[i] * v2[i];
+    }
+    return resultat;
+}
+
 // ============================================================
 //  Vec3
 // ============================================================

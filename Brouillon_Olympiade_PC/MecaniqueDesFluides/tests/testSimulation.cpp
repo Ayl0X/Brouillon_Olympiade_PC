@@ -23,15 +23,14 @@
 #include <random>
 #include <string>
 #include <vector>
+#include "..\..\Constantes.h"
 
-#include "MecaniqueDesFluides.h"
+#include "TMecaniqueDesFluides.h"
 
 // Variables globales definies dans MecaniqueDesFluides.cpp
-extern std::vector<Vec3> positions;
-extern std::vector<std::vector<float>> velocites;
-extern float coefficientRestitution;
-extern float gravity;
-extern std::vector<float> densites;
+extern std::vector<std::vector<float>> testPositions;
+extern std::vector<std::vector<float>> testVelocites;
+extern std::vector<float> testDensites;
 
 // Fonction a tester (re-declarer est sans danger si le .h la declare deja)
 void pasDeSimulation(float deltaT);
@@ -63,8 +62,8 @@ static sf::Vector2f mondeVersEcran(float x, float y) {
 
 // Bloc de particules sur une grille legerement perturbee (pour casser la symetrie)
 static void creerParticules() {
-    positions.clear();
-    velocites.clear();
+    testPositions.clear();
+    testVelocites.clear();
 
     const int nx = 80, ny = 40;
     const float espacement = 0.035f;
@@ -76,23 +75,23 @@ static void creerParticules() {
 
     for (int i = 0; i < nx; ++i) {
         for (int j = 0; j < ny; ++j) {
-            positions.push_back({ x0 + (i + bruit(gen)) * espacement, y0 + (j + bruit(gen)) * espacement });
-            velocites.push_back({ 0.0f, 0.0f });
+            testPositions.push_back({ x0 + (i + bruit(gen)) * espacement, y0 + (j + bruit(gen)) * espacement });
+            testVelocites.push_back({ 0.0f, 0.0f });
         }
     }
 }
 
 // collision() ne gere que le sol : on ajoute ici les murs gauche, droit et le plafond
 static void appliquerMurs() {
-    for (size_t i = 0; i < positions.size(); ++i) {
-        float& x = positions[i][0];
-        float& y = positions[i][1];
-        float& vx = velocites[i][0];
-        float& vy = velocites[i][1];
+    for (size_t i = 0; i < testPositions.size(); ++i) {
+        float& x = testPositions[i][0];
+        float& y = testPositions[i][1];
+        float& vx = testVelocites[i][0];
+        float& vy = testVelocites[i][1];
 
-        if (x < 0.0f) { x = 0.0f;      if (vx < 0.0f) vx = -coefficientRestitution * vx; }
-        if (x > BOITE_L) { x = BOITE_L;   if (vx > 0.0f) vx = -coefficientRestitution * vx; }
-        if (y > BOITE_H) { y = BOITE_H;   if (vy > 0.0f) vy = -coefficientRestitution * vy; }
+        if (x < 0.0f) { x = 0.0f;      if (vx < 0.0f) vx = -g_coefficientRestitution * vx; }
+        if (x > BOITE_L) { x = BOITE_L;   if (vx > 0.0f) vx = -g_coefficientRestitution * vx; }
+        if (y > BOITE_H) { y = BOITE_H;   if (vy > 0.0f) vy = -g_coefficientRestitution * vy; }
     }
 }
 
@@ -100,9 +99,9 @@ static void appliquerMurs() {
 // La force est maximale au centre et tombe a 0 au bord de la zone.
 static void appliquerInteraction(float sx, float sy, int sens, float dt) {
     const float r2 = RAYON_SOURIS * RAYON_SOURIS;
-    for (size_t i = 0; i < positions.size(); ++i) {
-        const float dx = sx - positions[i][0];
-        const float dy = sy - positions[i][1];
+    for (size_t i = 0; i < testPositions.size(); ++i) {
+        const float dx = sx - testPositions[i][0];
+        const float dy = sy - testPositions[i][1];
         const float d2 = dx * dx + dy * dy;
         if (d2 >= r2) continue;
 
@@ -111,8 +110,8 @@ static void appliquerInteraction(float sx, float sy, int sens, float dt) {
         float dirX = 0.0f, dirY = 0.0f;
         if (d > 1e-4f) { dirX = dx / d; dirY = dy / d; }
 
-        velocites[i][0] += (sens * dirX * FORCE_SOURIS - velocites[i][0] * AMORTISSEMENT_SOURIS) * t * dt;
-        velocites[i][1] += (sens * dirY * FORCE_SOURIS - velocites[i][1] * AMORTISSEMENT_SOURIS) * t * dt;
+        testVelocites[i][0] += (sens * dirX * FORCE_SOURIS - testVelocites[i][0] * AMORTISSEMENT_SOURIS) * t * dt;
+        testVelocites[i][1] += (sens * dirY * FORCE_SOURIS - testVelocites[i][1] * AMORTISSEMENT_SOURIS) * t * dt;
     }
 }
 
@@ -140,17 +139,17 @@ static sf::Color couleurVitesse(float t) {
 static void afficherDiagnostic(long nbPas) {
     float dMin = 1e30f, dMax = 0.0f;
     int densitesInvalides = 0;
-    for (float d : densites) {
+    for (float d : testDensites) {
         if (!(d > 0.0f) || !std::isfinite(d)) ++densitesInvalides;
         else { dMin = std::min(dMin, d); dMax = std::max(dMax, d); }
     }
 
     float vMax = 0.0f;
     int particulesNaN = 0;
-    for (size_t i = 0; i < positions.size(); ++i) {
-        const float vx = velocites[i][0], vy = velocites[i][1];
+    for (size_t i = 0; i < testPositions.size(); ++i) {
+        const float vx = testVelocites[i][0], vy = testVelocites[i][1];
         if (!std::isfinite(vx) || !std::isfinite(vy) ||
-            !std::isfinite(positions[i][0]) || !std::isfinite(positions[i][1])) {
+            !std::isfinite(testPositions[i][0]) || !std::isfinite(testPositions[i][1])) {
             ++particulesNaN;
         }
         else vMax = std::max(vMax, std::sqrt(vx * vx + vy * vy));
@@ -158,16 +157,16 @@ static void afficherDiagnostic(long nbPas) {
 
     std::cout << "pas " << nbPas
         << " | densites : min = " << dMin << ", max = " << dMax
-        << ", invalides = " << densitesInvalides << "/" << densites.size()
+        << ", invalides = " << densitesInvalides << "/" << testDensites.size()
         << " | vitesse max = " << vMax << " m/s"
         << " | particules NaN = " << particulesNaN << std::endl;
 
-    if (densites.size() != positions.size() || densitesInvalides == static_cast<int>(positions.size())) {
+    if (testDensites.size() != testPositions.size() || densitesInvalides == static_cast<int>(testPositions.size())) {
         std::cout << "  ATTENTION : aucune densite valide. UpdateSpatialLookup() est-elle appelee au debut de pasDeSimulation ?" << std::endl;
     }
 }
 
-int main() {
+int testSimulation() {
     sf::RenderWindow fenetre(sf::VideoMode({ LARGEUR, HAUTEUR }), "Simulation");
     fenetre.setFramerateLimit(60);
     fenetre.setKeyRepeatEnabled(false); // une pression = une action
@@ -179,7 +178,8 @@ int main() {
     bool unPas = false;          // demande d'avancer d'un seul pas
     long nbPas = 0;
     float vitesseMax = 5.0f;     // vitesse (m/s) affichee en rouge
-    const float graviteInitiale = gravity;   // valeur de depart de la gravite globale
+    const float graviteInitiale = g_gravite;   // valeur de depart de la gravite globale
+	float gravity = graviteInitiale;          // gravite globale (m/s^2), modifiee par la touche G
     bool gravite = true;                     // la gravite est appliquee par pasDeSimulation (touche G pour la couper)
 
     sf::Clock horloge;
@@ -257,12 +257,12 @@ int main() {
         const float rayonPx = RAYON_M * ECHELLE;
         sf::CircleShape cercle(rayonPx);
         cercle.setOrigin({ rayonPx, rayonPx });
-        for (size_t i = 0; i < positions.size(); ++i) {
-            const float vx = velocites[i][0];
-            const float vy = velocites[i][1];
+        for (size_t i = 0; i < testPositions.size(); ++i) {
+            const float vx = testVelocites[i][0];
+            const float vy = testVelocites[i][1];
             const float vitesse = std::sqrt(vx * vx + vy * vy);
 
-            cercle.setPosition(mondeVersEcran(positions[i][0], positions[i][1]));
+            cercle.setPosition(mondeVersEcran(testPositions[i][0], testPositions[i][1]));
             cercle.setFillColor(couleurVitesse(vitesse / vitesseMax));
             fenetre.draw(cercle);
         }
@@ -280,7 +280,7 @@ int main() {
 
         fenetre.display();
 
-        fenetre.setTitle("Particules : " + std::to_string(positions.size())
+        fenetre.setTitle("Particules : " + std::to_string(testPositions.size())
             + " | pas " + std::to_string(nbPas)
             + " | rouge = " + std::to_string(vitesseMax).substr(0, 4) + " m/s"
             + (gravite ? " | gravite ON" : " | gravite OFF")

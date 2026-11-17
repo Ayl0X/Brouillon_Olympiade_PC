@@ -10,16 +10,16 @@
 // e: coefficient de restitution (0 = parfaitement inélastique, 1 = parfaitement élastique)
 // deltaT: pas de temps (s) - pour cohérence avec l'API, bien que le rebond soit instantané
 // Retourne la nouvelle vitesse après rebond
-Vec3 Rrebond(const Vec3& v, const Vec3& n, float deltaT);
+Vec3 rebondFISR(const Vec3& v, const Vec3& n, float deltaT);
 
 // Collision avec le sol (y = 0). A appeler apres Update(deltaT) :
 // - detection : la balle a-t-elle traverse le sol ?
 // - reponse   : on la replace au niveau du sol et on fait rebondir sa vitesse
 //   avec la formule de Rebond.cpp : v' = v - (1 + e) * (v.n) * n
-void Rcollision(particule& p);
+void collisionFISR(particule& p, Vec3 normale, float rayon);
 
 // Applique la gravité à un vecteur vitesse
 // v: vitesse actuelle (m/s)
 // deltaT: pas de temps (s)
 // Retourne la nouvelle vitesse après application de la gravité
-Vec3 Rgravite(const Vec3& v, float deltaT);
+Vec3 graviteFISR(const Vec3& v, float deltaT);

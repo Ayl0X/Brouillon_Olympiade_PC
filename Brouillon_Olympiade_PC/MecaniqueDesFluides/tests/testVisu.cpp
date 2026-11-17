@@ -8,18 +8,19 @@
 //
 // IMPORTANT : ce fichier contient son propre main(). Il ne faut pas le compiler
 // avec main.cpp dans le meme projet (voir les instructions de mise en place).
-/*
+
 #include <SFML/Graphics.hpp>
 #include <algorithm>
 #include <cmath>
 #include <optional>
 #include <string>
 #include <vector>
-#include "MecaniqueDesFluides.h"
+#include "TMecaniqueDesFluides.h"
+#include "testVisu.h"
 
 // Variable globale definie dans MecaniqueDesFluides.cpp, utilisee par calculDensite().
 // (Re-declarer un extern est sans danger si le .h la declare deja.)
-extern std::vector<std::vector<float>> positions;
+extern std::vector<std::vector<float>> testPositions;
 
 // --- Parametres de la vue ---
 static const unsigned int LARGEUR = 800;
@@ -34,11 +35,11 @@ static sf::Vector2f mondeVersEcran(float x, float y) {
 }
 
 // Cree une grille 10 x 10 de particules lachees sans vitesse initiale
-static std::vector<particule> creerParticules() {
-    std::vector<particule> liste;
+static std::vector<testParticule> creerParticules() {
+    std::vector<testParticule> liste;
     for (int i = 0; i < 10; ++i) {
         for (int j = 0; j < 10; ++j) {
-            particule p;
+            testParticule p;
             p.position = { 0.3f + i * 0.5f, 1.0f + j * 0.4f };
             p.velocite = { 0.0f, 0.0f };
             liste.push_back(p);
@@ -54,11 +55,11 @@ static sf::Color degrade(float t) {
                      static_cast<std::uint8_t>(255 * (1.0f - t)));
 }
 
-int main() {
+int testVisu() {
     sf::RenderWindow fenetre(sf::VideoMode({ LARGEUR, HAUTEUR }), "Visualisation des particules");
     fenetre.setFramerateLimit(60);
 
-    std::vector<particule> particules = creerParticules();
+    std::vector<testParticule> particules = creerParticules();
 
     const float deltaT = 0.01f;     // pas de temps de la simulation (s)
     float accumulateur = 0.0f;
@@ -92,9 +93,9 @@ int main() {
         if (!pause) {
             accumulateur += dtFrame;
             while (accumulateur >= deltaT) {
-                for (particule& p : particules) {
-                    Update(deltaT, p);
-                    collision(p);
+                for (testParticule& p : particules) {
+                    testPasDeSimulation(deltaT);
+                    testCollision(p);
                 }
                 accumulateur -= deltaT;
             }
@@ -104,10 +105,10 @@ int main() {
         std::vector<float> valeurs(particules.size(), 0.0f);
         if (modeDensite) {
             // calculDensite() lit le tableau global "positions" : on le met a jour
-            positions.clear();
-            for (const particule& p : particules) positions.push_back(p.position);
+            testPositions.clear();
+            for (const testParticule& p : particules) testPositions.push_back(p.position);
             for (size_t i = 0; i < particules.size(); ++i) {
-                valeurs[i] = calculDensite(particules[i].position);
+                valeurs[i] = testCalculDensite(particules[i].position);
             }
         }
         else {
@@ -133,7 +134,7 @@ int main() {
         sf::CircleShape cercle(rayonPx);
         cercle.setOrigin({ rayonPx, rayonPx });
         for (size_t i = 0; i < particules.size(); ++i) {
-            const particule& p = particules[i];
+            const testParticule& p = particules[i];
             // le bas du cercle touche le sol quand y = 0 : on decale de un rayon
             cercle.setPosition(mondeVersEcran(p.position[0], p.position[1] + RAYON_M));
             cercle.setFillColor(degrade(valeurs[i] / maxValeur));
@@ -148,4 +149,4 @@ int main() {
     }
 
     return 0;
-}*/
+}

@@ -135,25 +135,37 @@ sfml-window.lib
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Lumiere\Realiste\RayTracing.cpp" />
-    <ClCompile Include="MecaniqueDesFluides\realiste\RMecaniqueDesFluides.cpp" />
-    <ClCompile Include="MecaniqueDesFluides\simpliste\SMecaniqueDesFluides.cpp" />
-    <ClCompile Include="MecaniqueDesFluides\tests\testChamp.cpp" />
+    <ClCompile Include="Lumiere\realiste\pathTracer.cpp" />
+    <ClCompile Include="Lumiere\simpliste\Phong.cpp" />
+    <ClCompile Include="MecaniqueDesFluides\realiste\flex.cpp" />
+    <ClCompile Include="MecaniqueDesFluides\realiste\MecaniqueDesFluides.cpp" />
+    <ClCompile Include="MecaniqueDesFluides\realiste\VisualisationFluides.cpp" />
+    <ClCompile Include="MecaniqueDesFluides\simpliste\MecaniqueDesFluidesCoef.cpp" />
+    <ClCompile Include="MecaniqueDesFluides\tests\testSimulation.cpp" />
     <ClCompile Include="MecaniqueDesFluides\tests\testVisu.cpp" />
-    <ClCompile Include="RebondEtGravite\realiste\mainRR.cpp" />
-    <ClCompile Include="RebondEtGravite\realiste\RRebondEtGravite.cpp" />
-    <ClCompile Include="RebondEtGravite\simpliste\mainSR.cpp" />
-    <ClCompile Include="RebondEtGravite\simpliste\SRebondEtGravite.cpp" />
+    <ClCompile Include="MecaniqueDesFluides\tests\TMecaniqueDesFluides.cpp" />
+    <ClCompile Include="RebondEtGravite\realiste\mainRC.cpp" />
+    <ClCompile Include="RebondEtGravite\realiste\rebondCoef.cpp" />
+    <ClCompile Include="RebondEtGravite\simpliste\mainFISR.cpp" />
+    <ClCompile Include="RebondEtGravite\simpliste\fastInverseSquareRoot.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Constantes.h" />
+    <ClInclude Include="Lumiere\realiste\pathTracer.h" />
+    <ClInclude Include="Lumiere\simpliste\phong.h" />
     <ClInclude Include="Math.h" />
-    <ClInclude Include="MecaniqueDesFluides\realiste\RMecaniqueDesFluides.h" />
-    <ClInclude Include="MecaniqueDesFluides\simpliste\SMecaniqueDesFluides.h" />
-    <ClInclude Include="RebondEtGravite\realiste\mainRR.h" />
-    <ClInclude Include="RebondEtGravite\realiste\RRebondEtGravite.h" />
-    <ClInclude Include="RebondEtGravite\simpliste\mainSR.h" />
-    <ClInclude Include="RebondEtGravite\simpliste\SRebondEtGravite.h" />
+    <ClInclude Include="MecaniqueDesFluides\realiste\flex_gl.h" />
+    <ClInclude Include="MecaniqueDesFluides\realiste\MecaniqueDesFluides.h" />
+    <ClInclude Include="MecaniqueDesFluides\realiste\VisualisationFluides.h" />
+    <ClInclude Include="MecaniqueDesFluides\simpliste\MecaniqueDesFluidesCoef.h" />
+    <ClInclude Include="MecaniqueDesFluides\tests\testChamp.h" />
+    <ClInclude Include="MecaniqueDesFluides\tests\testSimulation.h" />
+    <ClInclude Include="MecaniqueDesFluides\tests\testVisu.h" />
+    <ClInclude Include="MecaniqueDesFluides\tests\TMecaniqueDesFluides.h" />
+    <ClInclude Include="RebondEtGravite\realiste\mainRC.h" />
+    <ClInclude Include="RebondEtGravite\realiste\rebondCoef.h" />
+    <ClInclude Include="RebondEtGravite\simpliste\mainFISR.h" />
+    <ClInclude Include="RebondEtGravite\simpliste\fastInverseSquareRoot.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
