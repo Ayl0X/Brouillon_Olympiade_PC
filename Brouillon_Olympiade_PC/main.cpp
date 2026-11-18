@@ -29,7 +29,7 @@ enum mains {
 
 
 int main() {
-	mains mains = mainMDFCoef;
+	mains mains = mainMDF;
 
 	switch (mains)
 	{

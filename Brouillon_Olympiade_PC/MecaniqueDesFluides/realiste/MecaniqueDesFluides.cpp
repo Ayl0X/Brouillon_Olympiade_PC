@@ -16,12 +16,18 @@
 
 // --- Etat global de la simulation ---
 // Axes : x horizontal, y vertical vers le haut. Le sol est le plan y = 0.
-
+/*
 float seuilRepos = 0.1f;
 float rayonDeLissage = 0.35f;
 float masse = 0.50f;                 // densite d'un reseau d'espacement 0.075 = ~1040
 float densiteCible = 1.0f;
 float multiplicateurPression = 70.0f;   // 70 a 150 testes stables
+*/
+float seuilRepos = 0.1f;
+float rayonDeLissage = 0.2f;
+float masse = 1.0f;                 // densite d'un reseau d'espacement 0.075 = ~1040
+float densiteCible = 630.0;
+float multiplicateurPression = 288.0f;   // 70 a 150 testes stables
 
 std::vector<Vec3> positions;  // position
 std::vector<Vec3> velocites;  // vitesse
@@ -70,7 +76,7 @@ void pasDeSimulation(float deltaT) {
 
 	// Facteur de prédiction (anciennement 1/120 en dur). Garde 1/120 pour
 	// retrouver exactement ton comportement actuel, ou remplace par deltaT.
-	const float dtPrediction = 1.0f / 240.0f;
+	const float dtPrediction = 1.0f / 120.0f;
 
 	// 1) Gravité + positions prédites
 #pragma omp parallel for
@@ -211,7 +217,7 @@ struct Entree {
 	unsigned int cleCellule;  // cle de la cellule qui la contient
 };
 
-constexpr int MAX_VOISINS = 128;
+constexpr int MAX_VOISINS = 192;
 std::vector<int>   voisins;      // n * MAX_VOISINS
 std::vector<float> distVoisins;  // idem
 std::vector<int>   nbVoisins;    // n
